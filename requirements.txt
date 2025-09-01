@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+opencv-python
+numpy
+pydantic>=2.0
+onnxruntime
+requests
+PyYAML
+ultralytics
