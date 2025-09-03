@@ -33,3 +33,16 @@ class KlipperClient:
 
     def firmware_restart(self):
         return self.send_gcode("FIRMWARE_RESTART")
+
+    def query_objects(self, objects: dict):
+        """
+        Moonraker /printer/objects/query
+        objects 예:
+        {
+          "gcode_move": ["position", "speed"],
+          "motion_report": ["live_position", "live_velocity", "steppers"],
+          "stepper_enable": ["steppers"],
+          "manual_stepper gear1": ["position", "enabled"]
+        }
+        """
+        return self._post("/printer/objects/query", {"objects": objects})

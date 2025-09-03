@@ -1,4 +1,4 @@
-import threading
+import threading, json
 from typing import Optional, List
 import cv2
 import rclpy
@@ -7,7 +7,8 @@ from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import Image
 from vision_msgs.msg import Detection2DArray
 from cv_bridge import CvBridge
-from std_msgs.msg import Float64MultiArray, MultiArrayDimension, MultiArrayLayout
+from std_msgs.msg import Float64MultiArray, MultiArrayDimension, MultiArrayLayout, String
+
 
 class ROSBridge(Node):
     def __init__(self):
@@ -25,6 +26,11 @@ class ROSBridge(Node):
         self.pub_move_axis = self.create_publisher(Float64MultiArray, '/robot/move_axis_cmd', 10)
         self.pub_move_xyz  = self.create_publisher(Float64MultiArray, '/robot/move_xyz_cmd', 10)
         self.pub_move_vision = self.create_publisher(Float64MultiArray, '/robot/move_vision_cmd', 10)
+
+        self._status = {}
+        qos_best = QoSProfile(depth=1, reliability=ReliabilityPolicy.BEST_EFFORT,
+                              history=HistoryPolicy.KEEP_LAST)
+        self.create_subscription(String, '/status', self.on_status, qos_best)
 
     def on_image(self, msg: Image):
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
@@ -99,3 +105,22 @@ class ROSBridge(Node):
             raise ValueError("AXIS must be J1..J6 or X/Y/Z")
         m = Float64MultiArray(); m.data = [code, float(dist), spd, acc, rel_flag]
         self.pub_move_vision.publish(m)
+
+    def on_status(self, msg: String):
+        try:
+            data = json.loads(msg.data)
+        except Exception:
+            data = {}
+        # 기존에 이미지/디텍션 캐시와 같은 방식으로 락이 있다면 락 사용
+        try:
+            self._lock.acquire()
+            self._status = data
+        finally:
+            self._lock.release()
+
+    def get_latest_status(self) -> dict:
+        try:
+            self._lock.acquire()
+            return dict(self._status)
+        finally:
+            self._lock.release()

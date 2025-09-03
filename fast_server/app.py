@@ -4,48 +4,17 @@ from typing import Optional, List
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, field_validator
-
-class MoveJBody(BaseModel):
-    joints: List[float]
-    speed: float = 0.5
-    accel: float = 1.0
-    relative: bool = False
-    @field_validator('joints')
-    @classmethod
-    def _len6(cls, v):
-        if len(v) != 6:
-            raise ValueError("joints must be length 6")
-        return v
-
-class AxisMoveBody(BaseModel):
-    AXIS: str
-    DIST: float
-    SPD: float | None = None
-    ACC: float | None = None
-    MODE: str = "relative"
-    @field_validator('MODE')
-    @classmethod
-    def _mode_ok(cls, v):
-        v2 = str(v).strip().lower()
-        if v2 not in ("relative","absolute"):
-            raise ValueError("MODE must be 'relative' or 'absolute'")
-        return v2
-    @field_validator('AXIS')
-    @classmethod
-    def _axis_ok(cls, v):
-        v2 = str(v).strip().upper()
-        ok = (re.match(r'^J[1-6]$', v2) is not None) or (v2 in ("X","Y","Z"))
-        if not ok:
-            raise ValueError("AXIS must be J1..J6 or X/Y/Z")
-        return v2
-    class Config:
-        json_schema_extra = {"example":{"AXIS":"J1","DIST":100.0,"SPD":0.5,"ACC":1.0,"MODE":"relative"}}
+from fast_server.Model import MoveJBody,AxisMoveBody,StatusBody
 
 def create_app(bridge, cors_origins: Optional[list]=None) -> FastAPI:
     app = FastAPI(title="Robot Unified Server")
-    app.add_middleware(CORSMiddleware, allow_origins=cors_origins or ['*'],
-                       allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins or ['*'],
+        allow_credentials=True,
+        allow_methods=['*'],  # ← 오타 수정
+        allow_headers=['*']
+    )
 
     @app.get("/mjpeg")
     async def mjpeg():
@@ -96,5 +65,13 @@ def create_app(bridge, cors_origins: Optional[list]=None) -> FastAPI:
         bridge.publish_move_vision(body.AXIS, float(body.DIST), None if body.SPD is None else float(body.SPD),
                                    None if body.ACC is None else float(body.ACC), rel)
         return {"ok": True}
+
+    @app.get("/status")
+    def get_status():
+        # bridge에 캐시가 아직 없더라도 안전하게
+        try:
+            return bridge.get_latest_status()
+        except AttributeError:
+            return {}
 
     return app
