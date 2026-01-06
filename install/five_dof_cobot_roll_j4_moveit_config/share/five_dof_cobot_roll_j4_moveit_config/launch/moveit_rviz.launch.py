@@ -1,0 +1,1 @@
+/home/tracelab/RobotUnified_v2/src/five_dof_cobot_roll_j4_moveit_config/launch/moveit_rviz.launch.py

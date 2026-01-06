@@ -22,7 +22,7 @@ class ROSBridge(Node):
         self.create_subscription(Image, '/vision/streaming', self.on_image, qos_sensor)
         self.create_subscription(Detection2DArray, '/vision/detections', self.on_det, qos_sensor)
 
-        self.pub_movej = self.create_publisher(Float64MultiArray, '/robot/movej_cmd', 10)
+        self.pub_movej     = self.create_publisher(Float64MultiArray, '/robot/movej_cmd', 10)
         self.pub_move_axis = self.create_publisher(Float64MultiArray, '/robot/move_axis_cmd', 10)
         self.pub_move_xyz  = self.create_publisher(Float64MultiArray, '/robot/move_xyz_cmd', 10)
         self.pub_move_vision = self.create_publisher(Float64MultiArray, '/robot/move_vision_cmd', 10)
@@ -58,7 +58,7 @@ class ROSBridge(Node):
 
     def publish_movej(self, joints_rad: List[float], speed: float, accel: float, relative: bool):
         if len(joints_rad) != 6: raise ValueError("joints_rad must be length 6")
-        data = list(joints_rad) + [float(speed), float(accel), 1.0 if relative else 0.0]
+        data = list(joints_rad) + [float(speed), float(accel), 1 if relative else 0.0]
         m = Float64MultiArray(); m.data = data
         m.layout = MultiArrayLayout(dim=[
             MultiArrayDimension(label='joints', size=6, stride=9),
@@ -66,16 +66,19 @@ class ROSBridge(Node):
         self.pub_movej.publish(m)
 
     def publish_move_axis(self, axis: str, dist: float, speed: float | None, accel: float | None, relative: bool):
+        print("ROS p:ublish_move_axis",axis,dist)
         ax = axis.upper()
         rel_flag = 1.0 if relative else 0.0
+
         spd = -1.0 if speed is None else float(speed)
         acc = -1.0 if accel is None else float(accel)
         if ax.startswith('J') and len(ax)==2 and ax[1].isdigit():
             idx = int(ax[1]) - 1
             if not (0 <= idx <= 5): raise ValueError("Joint axis must be J1..J6")
             m = Float64MultiArray(); m.data = [float(idx), float(dist), spd, acc, rel_flag]
-            self.pub_move_axis.publish(m)
+            # self.pub_move_axis.publish(m)
             q = [0.0]*6; q[idx]=float(dist); self.publish_movej(q, speed or 0.0, accel or 0.0, relative)
+            print("q: ",q)
         else:
             code = {'X':0.0,'Y':1.0,'Z':2.0}.get(ax)
             if code is None: raise ValueError("AXIS must be J1..J6 or X/Y/Z")
@@ -84,8 +87,18 @@ class ROSBridge(Node):
 
     def publish_move_xyz(self, axis: str, dist: float, speed: float | None, accel: float | None, relative: bool):
         ax = axis.upper()
-        code = {'X':0.0,'Y':1.0,'Z':2.0}.get(ax)
-        if code is None: raise ValueError("AXIS must be X/Y/Z")
+        axis_codes = {
+            'X': 0.0,
+            'Y': 1.0,
+            'Z': 2.0,
+            'YAW': 3.0,
+            'RZ': 3.0,
+            'P': 4.0,
+            'PITCH': 4.0,
+            'RY': 4.0,
+        }
+        code = axis_codes.get(ax)
+        if code is None: raise ValueError("AXIS must be X/Y/Z/YAW/P")
         rel_flag = 1.0 if relative else 0.0
         spd = -1.0 if speed is None else float(speed)
         acc = -1.0 if accel is None else float(accel)

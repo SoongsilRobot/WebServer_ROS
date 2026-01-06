@@ -1,5 +1,6 @@
 import requests
 from typing import Optional
+from rclpy.node import Node
 
 class KlipperClient:
     def __init__(self, base_url="http://127.0.0.1:7125", api_key: Optional[str]=None, timeout: float=3.0):
@@ -19,13 +20,16 @@ class KlipperClient:
         return self._post("/printer/gcode/script", {"script": script})
 
     def manual_stepper_move(self, stepper: str, move: float, speed: float=None, accel: float=None):
-        cmd = f"MANUAL_STEPPER STEPPER={stepper} MOVE={move:.6f}"
-        if speed is not None: cmd += f" SPEED={max(0.001,float(speed)):.3f}"
-        if accel is not None: cmd += f" ACCEL={max(0.001,float(accel)):.3f}"
+        cmd = f"MOVE_ROBOT {stepper}={float(move):.6f}"
+        if speed not in (None, 0):
+            cmd += f" SPEED={max(0.001, float(speed)):.3f}"
+        if accel not in (None, 0):
+            cmd += f" ACCEL={max(0.001, float(accel)):.3f}"
+        print("(manual_stepper_move)CMD: ", cmd)
         return self.send_gcode(cmd)
 
     def manual_stepper_setpos(self, stepper: str, position: float):
-        cmd = f"MANUAL_STEPPER STEPPER={stepper} SET_POSITION={position:.6f}"
+        cmd = f"MOVE_ROBOT STEPPER={stepper} SET_POSITION={position:.6f}"
         return self.send_gcode(cmd)
 
     def emergency_stop(self):

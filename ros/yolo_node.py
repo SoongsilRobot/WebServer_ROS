@@ -14,7 +14,7 @@ class YoloNode(Node):
     - Publishes annotated image to /vision/streaming and detections to /vision/detections
     """
     def __init__(self, in_topic='/vision/streaming/raw', out_topic='/vision/streaming',
-                 det_topic='/vision/detections', onnx_path='ros/models/yolov8n.onnx',
+                 det_topic='/vision/detections', onnx_path='ros/models/yolo11n.onnx',
                  input_size=640, conf_thres=0.25, onnx_format='auto',  # kept for CLI compat
                  debug_draw_letterbox=False, preprocess='letterbox'):
         super().__init__('yolo_node')

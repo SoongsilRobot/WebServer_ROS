@@ -14,12 +14,13 @@ def start_fastapi(app, host, port):
     server = uvicorn.Server(config); server.run()
 
 def main():
+    print("Hello")
     parser = argparse.ArgumentParser()
     parser.add_argument('--host', default='0.0.0.0'); parser.add_argument('--port', type=int, default=8000)
     parser.add_argument('--device_index', type=int, default=0)
     parser.add_argument('--width', type=int, default=640); parser.add_argument('--height', type=int, default=480); parser.add_argument('--fps', type=int, default=10)
-    parser.add_argument('--onnx_path', default='ros/models/yolov5nu.onnx'); parser.add_argument('--input_size', type=int, default=320)
-    parser.add_argument('--conf_thres', type=float, default=0.25); parser.add_argument('--onnx_format', default='auto')
+    parser.add_argument('--onnx_path', default='ros/models/yolo11n.onnx'); parser.add_argument('--input_size', type=int, default=320)
+    parser.add_argument('--conf_thres', type=float, default=0.15); parser.add_argument('--onnx_format', default='auto')
     parser.add_argument('--debug_draw_letterbox', action='store_true')
     parser.add_argument('--use_serial', action='store_true'); parser.add_argument('--serial_port', default='/dev/ttyACM0'); parser.add_argument('--baud', type=int, default=115200)
     parser.add_argument('--use_klipper', action='store_true', default=True); parser.add_argument('--klipper_config', type=str, default='config/joints.yaml')
@@ -34,7 +35,7 @@ def main():
 
     app = create_app(bridge, cors_origins=['*'])
 
-    executor = MultiThreadedExecutor()
+    executor = MultiThreadedExecutor(num_threads=8)
     nodes = [cam, yolo, bridge, driver] + ([klipper] if klipper else [])
     for n in nodes: executor.add_node(n)
     ros_thread = threading.Thread(target=executor.spin, daemon=True); ros_thread.start()

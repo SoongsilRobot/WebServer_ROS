@@ -1,13 +1,23 @@
+# axis_names: [X,Y,Z,A,B,C]
 moonraker_url: http://127.0.0.1:7125
 api_key: null
 deadband_rad: 0.0001
 joints:
-  - {name: J1, stepper: J1, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
-  - {name: J2, stepper: J2, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
-  - {name: J3, stepper: J3, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
-  - {name: J4, stepper: J4, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
-  - {name: J5, stepper: J5, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
-  - {name: J6, stepper: J6, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
+  - {name: J1, stepper: X, units_per_rad: 1, speed_units_per_rads: 1}
+  - {name: J2, stepper: Y, units_per_rad: 1, speed_units_per_rads: 1}
+  - {name: J3, stepper: Z, units_per_rad: 1, speed_units_per_rads: 1}
+  - {name: J4, stepper: A, units_per_rad: 1, speed_units_per_rads: 1}
+  - {name: J5, stepper: B, units_per_rad: 1, speed_units_per_rads: 1}
+  - {name: J6, stepper: C, units_per_rad: 1, speed_units_per_rads: 1}
+  
+  # - {name: X, stepper: X, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
+  # - {name: Y, stepper: Y, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
+  # - {name: Z, stepper: Z, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
+  # - {name: A, stepper: A, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
+  # - {name: B, stepper: B, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
+  # - {name: C, stepper: C, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
+  
+
 # For XYZ moves, add entries named X/Y/Z if you want to drive them via Klipper:
 #  - {name: X, stepper: X, units_per_rad: 1.0, speed_units_per_rads: 1.0}
 #  - {name: Y, stepper: Y, units_per_rad: 1.0, speed_units_per_rads: 1.0}

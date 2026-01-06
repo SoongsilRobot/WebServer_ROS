@@ -39,7 +39,7 @@ class AxisMoveBody(BaseModel):
         json_schema_extra = {"example":{"AXIS":"J1","DIST":100.0,"SPD":0.5,"ACC":1.0,"MODE":"relative"}}
 
 class XYZMoveBody(BaseModel):
-    AXIS: str
+    XYZ: str
     DIST: float
     SPD: float | None = None
     ACC: float | None = None
@@ -51,16 +51,17 @@ class XYZMoveBody(BaseModel):
         if v2 not in ("relative","absolute"):
             raise ValueError("MODE must be 'relative' or 'absolute'")
         return v2
-    @field_validator('AXIS')
+    @field_validator('XYZ')
     @classmethod
     def _axis_ok(cls, v):
         v2 = str(v).strip().upper()
-        ok = (re.match(r'^J[1-6]$', v2) is not None) or (v2 in ("X","Y","Z"))
+        ok_vals = {"X","Y","Z","YAW","RZ","P","PITCH","RY"}
+        ok = v2 in ok_vals
         if not ok:
-            raise ValueError("AXIS must be J1..J6 or X/Y/Z")
+            raise ValueError("XYZ must be X/Y/Z/YAW/P")
         return v2
     class Config:
-        json_schema_extra = {"example":{"AXIS":"J1","DIST":100.0,"SPD":0.5,"ACC":1.0,"MODE":"relative"}}
+        json_schema_extra = {"example":{"XYZ":"X","DIST":100.0,"SPD":0.5,"ACC":1.0,"MODE":"relative"}}
 
 class StatusBody(BaseModel):
     joint_pos : List[float]

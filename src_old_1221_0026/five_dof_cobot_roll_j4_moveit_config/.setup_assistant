@@ -1,0 +1,10 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: ""
+    relative_path: /home/tracelab/RobotUnified_v2/Test_IK/Robot.urdf
+  srdf:
+    relative_path: config/five_dof_cobot_rollJ4.srdf
+  package_settings:
+    author_name: ""
+    author_email: ""
+    generated_timestamp: 1766221083

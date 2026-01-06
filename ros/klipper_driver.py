@@ -1,15 +1,24 @@
-import rclpy, json, time
+import json
+import math
+import time
+from pathlib import Path
+
+import rclpy
+from concurrent.futures import ThreadPoolExecutor
 from rclpy.node import Node
+from rclpy.callback_groups import ReentrantCallbackGroup
 from std_msgs.msg import Float64MultiArray, String
 from .klipper_client import KlipperClient
+from .kinematics import CartesianKinematics
 
 try:
     import yaml
 except Exception:
     yaml = None
 
+_ROS_DIR = Path(__file__).resolve().parent
 _DEFAULT_CFG = {
-    "moonraker_url": "http://192.168.234.99:7125",
+    "moonraker_url": "http://127.0.0.1:7125",
     "api_key": None,
     # 이동 명령용 조인트 스케일 (상태 수집과는 별개)
     "joints": [
@@ -20,18 +29,36 @@ _DEFAULT_CFG = {
         {"name": "J5", "stepper": "J5", "units_per_rad": 57.2957795, "speed_units_per_rads": 57.2957795},
         {"name": "J6", "stepper": "J6", "units_per_rad": 57.2957795, "speed_units_per_rads": 57.2957795},
     ],
-    "deadband_rad": 1e-4
+    "deadband_rad": 1e-4,
+    "enable_cartesian": True,
+    "cartesian_linear_scale": 0.001,  # mm -> m
+    "cartesian_angular_scale": math.pi / 180.0,  # deg -> rad
+    "urdf_path": str(_ROS_DIR / "description" / "URDF_Setting.xacro"),
+    "base_link": "base_link",
+    "tip_link": "ee_link",
+    "position_tolerance": 0.002,  # meters
+    "orientation_tolerance": 0.05,  # rad
+}
+
+URDF_JOINT_ALIASES = {
+    "J1": "joint1_base_yaw",
+    "J2": "joint2_shoulder_pitch",
+    "J3": "joint3_elbow_pitch",
+    "J4": "joint4_wrist_roll",
+    "J5": "joint5_wrist_pitch",
 }
 
 class KlipperDriver(Node):
     def __init__(self, config_path: str = "config/joints.yaml"):
+        print("KlipperDriver Init")
         super().__init__('klipper_driver')
         self.declare_parameter('config_path', config_path)
         path = self.get_parameter('config_path').value
-
+        axes = [0,0,0,0,0,0]
         cfg = dict(_DEFAULT_CFG)
         if yaml is None:
             self.get_logger().warn("yaml not available, using default config.")
+            print("yaml not available, using default config.")
         else:
             try:
                 with open(path, 'r', encoding='utf-8') as f:
@@ -42,17 +69,48 @@ class KlipperDriver(Node):
             except Exception as e:
                 self.get_logger().warn(f"Failed to read {path}, using defaults: {e}")
 
+        cfg.setdefault("joint_aliases", URDF_JOINT_ALIASES)
         self.cfg = cfg
         self.deadband = float(cfg.get("deadband_rad", 1e-4))
         self.client = KlipperClient(cfg["moonraker_url"], cfg.get("api_key"))
         self.joints = cfg["joints"]
+        self.axes = {f"J{i+1}": {"pos": 0.0, "speed": 0.0, "moving": False, "enabled": False} for i in range(6)}
+        self.last_joint_targets = [0.0] * 6
+        self.linear_scale = float(cfg.get("cartesian_linear_scale", 0.001))
+        self.angular_scale = float(cfg.get("cartesian_angular_scale", math.pi / 180.0))
+        self.enable_cartesian = bool(cfg.get("enable_cartesian", True))
+        self.kinematics = None
+        if self.enable_cartesian:
+            xacro_path = Path(cfg.get("urdf_path", _DEFAULT_CFG["urdf_path"]))
+            base_link = cfg.get("base_link", "base_link")
+            tip_link = cfg.get("tip_link", "ee_link")
+            aliases = cfg.get("joint_aliases", URDF_JOINT_ALIASES)
+            pos_tol = float(cfg.get("position_tolerance", _DEFAULT_CFG["position_tolerance"]))
+            ori_tol = float(cfg.get("orientation_tolerance", _DEFAULT_CFG["orientation_tolerance"]))
+            try:
+                self.kinematics = CartesianKinematics(
+                    xacro_path,
+                    base_link=base_link,
+                    tip_link=tip_link,
+                    joint_aliases=aliases,
+                    position_tolerance=pos_tol,
+                    orientation_tolerance=ori_tol,
+                )
+                self.last_joint_targets = self.kinematics.current_alias_joints()
+                self.get_logger().info(f"Cartesian IK ready (model={xacro_path})")
+            except Exception as exc:
+                self.enable_cartesian = False
+                self.get_logger().error(f"Failed to initialise kinematics: {exc}")
+        self.cb_motion = ReentrantCallbackGroup()
+        self.cb_status = ReentrantCallbackGroup()
+        self._move_pool = ThreadPoolExecutor(max_workers=1)
 
         # Subscribers (move commands)
-        self.create_subscription(Float64MultiArray, '/robot/movej_cmd', self.on_cmd, 10)
-        self.create_subscription(Float64MultiArray, '/robot/move_axis_cmd', self.on_axis_cmd, 10)
-        self.create_subscription(Float64MultiArray, '/robot/move_xyz_cmd', self.on_xyz_cmd, 10)
-        self.create_subscription(Float64MultiArray, '/robot/move_vision_cmd', self.on_vision_cmd, 10)
-
+        self.sub_movej = self.create_subscription(Float64MultiArray, '/robot/movej_cmd', self.on_cmd, 10, callback_group=self.cb_motion)
+        self.sub_axis  = self.create_subscription(Float64MultiArray, '/robot/move_axis_cmd', self.on_axis_cmd, 10, callback_group=self.cb_motion)
+        self.sub_xyz   = self.create_subscription(Float64MultiArray, '/robot/move_xyz_cmd', self.on_xyz_cmd, 10, callback_group=self.cb_motion)
+        self.sub_vis   = self.create_subscription(Float64MultiArray, '/robot/move_vision_cmd', self.on_vision_cmd, 10, callback_group=self.cb_motion)
+        
         self.get_logger().info(f"KlipperDriver ready; Moonraker: {cfg['moonraker_url']}")
 
         # Publisher (status)
@@ -63,7 +121,7 @@ class KlipperDriver(Node):
                       "gear1": None, "gear2": None, "gear3": None}
 
         # 5Hz 폴링
-        self.create_timer(0.1, self._poll_status)
+        self.create_timer(0.1, self._poll_status, callback_group=self.cb_status)
 
     # ---------------------- move command helpers ----------------------
 
@@ -79,38 +137,73 @@ class KlipperDriver(Node):
         (주의) X/Y/Z 같은 기본 stepper를 직접 수동 구동하려면 별도 G-code가 필요합니다.
         지금은 J4~J6(gear1..3) 위주 사용을 가정합니다.
         """
+        print("SEND delta")
         j = self._find_joint(name)
         if j is None:
             self.get_logger().warn(f"No mapping for axis '{name}' in config; skipping.")
             return
-
-        units_per_rad = float(j.get("units_per_rad", 57.2957795))
+        
+        units_per_rad = float(j.get("units_per_rad", 1))
         speed_units_per_rads = float(j.get("speed_units_per_rads", units_per_rad))
         stepper = j.get("stepper", name)
 
         move_units = delta_rad * units_per_rad
-        speed_units = max(0.001, speed_rads * speed_units_per_rads)
+        
+        speed_units = None
+        if (speed_rads is not None) and (speed_rads != 0):
+            speed_units = max(0.001, speed_rads * speed_units_per_rads)
 
+        # HTTP 요청이 길어도 ROS 콜백을 막지 않도록 전용 쓰레드에서 실행
+        self._move_pool.submit(self._execute_stepper_move, stepper, move_units, speed_units, accel_rads2, delta_rad)
+
+    def _execute_stepper_move(self, stepper: str, move_units: float, speed_units: float | None,
+                              accel_rads2: float, delta_rad: float):
         try:
-            # KlipperClient는 MANUAL_STEPPER용 메소드가 있다고 가정
             self.client.manual_stepper_move(stepper=stepper, move=move_units, speed=speed_units, accel=accel_rads2)
             self.get_logger().info(f"[{stepper}] MOVE={move_units:.4f} (dq={delta_rad:.4f} rad)")
+            print(f"[{stepper}] MOVE={move_units:.4f} (dq={delta_rad:.4f} rad)")
         except Exception as e:
             self.get_logger().error(f"Moonraker request failed: {e}")
+            print(f"Moonraker request failed: {e}")
+
+    def _dispatch_movej(self, joint_deltas, speed, accel):
+        payload = list(joint_deltas)
+        if len(payload) < 6:
+            payload.extend([0.0] * (6 - len(payload)))
+        spd = -1.0 if speed is None else float(speed)
+        acc = -1.0 if accel is None else float(accel)
+        msg = Float64MultiArray()
+        msg.data = payload[:6] + [spd, acc, 1.0]
+        self.on_cmd(msg)
 
     # ---------------------- subscribers ----------------------
 
-    def on_cmd(self, msg: Float64MultiArray):
+    def on_cmd(self, msg: Float64MultiArray):        
         d = list(msg.data)
+        print("on_cmd's d:",d)
         if len(d) < 9:
             self.get_logger().warn("movej_cmd invalid")
             return
-        q = d[:6]
-        speed = float(d[6])
-        accel = float(d[7])
+        
+        q = list(d[:6])
+        if len(q) < 6:
+            q.extend([0.0] * (6 - len(q)))
+        print("Before q: " ,q)
+        speed = None if d[6] == -1.0 else float(d[6])
+        accel = None if d[7] == -1.0 else float(d[7])
         rel = int(d[8])
         if rel == 0:
             self.get_logger().warn("Absolute requested; treating as relative")
+            cached_pos = [self.axes.get(f"J{i+1}", {}).get("pos", 0.0) for i in range(len(q))]
+            q_rel = []
+            for target, cur in zip(q, cached_pos):
+                if abs(target) < self.deadband:
+                    q_rel.append(0.0)
+                else:
+                    q_rel.append(target - cur)
+            q = q_rel
+            print("Now q (converted to relative deltas): ", q)
+        # Lst = ['X','Y','Z','A','B','C']
         for i, dq in enumerate(q):
             dq = float(dq)
             if abs(dq) < self.deadband:
@@ -124,8 +217,8 @@ class KlipperDriver(Node):
             return
         idx = int(d[0])
         dq = float(d[1])
-        speed = float(d[2])
-        accel = float(d[3])
+        speed = float(d[2]) if d[2] != -1.0 else None
+        accel = float(d[3]) if d[3] != -1.0 else None
         self._send_stepper_delta(f"J{idx+1}", dq, speed, accel)
 
     def on_xyz_cmd(self, msg: Float64MultiArray):
@@ -135,14 +228,27 @@ class KlipperDriver(Node):
             return
         code = int(d[0])
         dist = float(d[1])
-        speed = float(d[2])
-        accel = float(d[3])
-        axis_map = {0: "X", 1: "Y", 2: "Z"}
-        name = axis_map.get(code, None)
-        if name is None:
+        speed = None if d[2] == -1.0 else float(d[2])
+        accel = None if d[3] == -1.0 else float(d[3])
+        rel_flag = int(d[4]) if len(d) > 4 else 1
+        axis_map = {0: "X", 1: "Y", 2: "Z", 3: "YAW", 4: "P"}
+        axis_name = axis_map.get(code)
+        if axis_name is None:
             self.get_logger().warn("xyz_cmd unknown axis")
             return
-        self._send_stepper_delta(name, dist, speed, accel)
+        if not self.kinematics:
+            self.get_logger().warn("Cartesian command received but IK is disabled")
+            return
+        scale = self.linear_scale if axis_name in ("X", "Y", "Z") else self.angular_scale
+        mode = "relative" if rel_flag == 1 else "absolute"
+        try:
+            joints_abs = self.kinematics.apply_axis_command(axis_name, dist * scale, mode)
+        except Exception as exc:
+            self.get_logger().error(f"IK solve failed for axis {axis_name}: {exc}")
+            return
+        rel_joints = [new - old for new, old in zip(joints_abs, self.last_joint_targets)]
+        self.last_joint_targets = list(joints_abs)
+        self._dispatch_movej(rel_joints, speed, accel)
 
     def on_vision_cmd(self, msg: Float64MultiArray):
         # currently same as xyz
@@ -215,7 +321,10 @@ class KlipperDriver(Node):
         th_amax = fnum(tool.get("max_accel"))
 
         gcm = status.get("gcode_move", {}) or {}
-        gpos = gcm.get("gcode_position") or [0, 0, 0, 0]
+        self.gpos = gcm.get("gcode_position") or [0, 0, 0, 0,0]
+        # for i in (5-self.gpos.count()):
+        #     self.gpos.append(0)
+        
         g_speed = fnum(gcm.get("speed"))
         homing_origin = gcm.get("homing_origin") or [0, 0, 0, 0]
 
@@ -264,7 +373,7 @@ class KlipperDriver(Node):
         # 정지/동작 판정 임계값 (필요시 조정)
         EPS = 1e-3  # mm/s
 
-        axes = {
+        self.axes = {
             "J1": {"pos": x, "speed": vx, "moving": abs(vx) > EPS,
                    "enabled": bool(en_map.get("stepper_x", False))},
             "J2": {"pos": y, "speed": vy, "moving": abs(vy) > EPS,
@@ -278,7 +387,7 @@ class KlipperDriver(Node):
 
         payload = {
             "timestamp": now,
-            "axes": axes,
+            "axes": self.axes,
             "toolhead": {
                 "position": th_pos,
                 "homed_axes": th_homed,
@@ -286,7 +395,7 @@ class KlipperDriver(Node):
                 "max_accel": th_amax,
             },
             "gcode_move": {
-                "gcode_position": gpos,
+                "gcode_position": self.gpos,
                 "speed": g_speed,
                 "homing_origin": homing_origin,
             },

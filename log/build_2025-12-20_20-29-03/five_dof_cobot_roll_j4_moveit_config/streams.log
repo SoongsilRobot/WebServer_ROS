@@ -1,0 +1,58 @@
+[0.034s] Invoking command in '/home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/tracelab/RobotUnified_v2/src/five_dof_cobot_roll_j4_moveit_config -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config
+[0.166s] -- The C compiler identification is GNU 13.3.0
+[0.298s] -- The CXX compiler identification is GNU 13.3.0
+[0.339s] -- Detecting C compiler ABI info
+[0.550s] -- Detecting C compiler ABI info - done
+[0.565s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.566s] -- Detecting C compile features
+[0.566s] -- Detecting C compile features - done
+[0.583s] -- Detecting CXX compiler ABI info
+[0.823s] -- Detecting CXX compiler ABI info - done
+[0.839s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.840s] -- Detecting CXX compile features
+[0.840s] -- Detecting CXX compile features - done
+[0.845s] -- Found ament_cmake: 2.5.4 (/opt/ros/jazzy/share/ament_cmake/cmake)
+[1.142s] -- Found Python3: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+[1.310s] -- Override CMake install command with custom implementation using symlinks instead of copying resources
+[1.570s] -- Configuring done (1.5s)
+[1.575s] -- Generating done (0.0s)
+[1.577s] -- Build files have been written to: /home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config
+[1.590s] Invoked command in '/home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake /home/tracelab/RobotUnified_v2/src/five_dof_cobot_roll_j4_moveit_config -DAMENT_CMAKE_SYMLINK_INSTALL=1 -DCMAKE_INSTALL_PREFIX=/home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config
+[1.593s] Invoking command in '/home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config -- -j4 -l4
+[1.688s] Invoked command in '/home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --build /home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config -- -j4 -l4
+[1.718s] Invoking command in '/home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config
+[1.736s] -- Install configuration: ""
+[1.736s] -- Execute custom install script
+[1.737s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/ament_index/resource_index/package_run_dependencies/five_dof_cobot_roll_j4_moveit_config
+[1.759s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/ament_index/resource_index/parent_prefix_path/five_dof_cobot_roll_j4_moveit_config
+[1.780s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/environment/ament_prefix_path.sh
+[1.800s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/environment/ament_prefix_path.dsv
+[1.829s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/environment/path.sh
+[1.850s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/environment/path.dsv
+[1.873s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/local_setup.bash
+[1.895s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/local_setup.sh
+[1.946s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/local_setup.zsh
+[1.970s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/local_setup.dsv
+[1.992s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/package.dsv
+[2.021s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/ament_index/resource_index/packages/five_dof_cobot_roll_j4_moveit_config
+[2.044s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/cmake/five_dof_cobot_roll_j4_moveit_configConfig.cmake
+[2.065s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/cmake/five_dof_cobot_roll_j4_moveit_configConfig-version.cmake
+[2.085s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/package.xml
+[2.111s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/demo.launch.py
+[2.135s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/move_group.launch.py
+[2.157s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/moveit_rviz.launch.py
+[2.179s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/rsp.launch.py
+[2.199s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/setup_assistant.launch.py
+[2.228s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/spawn_controllers.launch.py
+[2.248s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/static_virtual_joint_tfs.launch.py
+[2.269s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/launch/warehouse_db.launch.py
+[2.292s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/five_dof_cobot_rollJ4.srdf
+[2.319s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/five_dof_cobot_rollJ4.urdf
+[2.340s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/five_dof_cobot_rollJ4.urdf.xacro
+[2.362s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/joint_limits.yaml
+[2.383s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/kinematics.yaml
+[2.405s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/moveit.rviz
+[2.432s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/pilz_cartesian_limits.yaml
+[2.452s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/config/ros2_controllers.yaml
+[2.475s] -- Symlinking: /home/tracelab/RobotUnified_v2/install/five_dof_cobot_roll_j4_moveit_config/share/five_dof_cobot_roll_j4_moveit_config/.setup_assistant
+[2.501s] Invoked command in '/home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config' returned '0': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/jazzy DEBUGINFOD_URLS=https://debuginfod.ubuntu.com /usr/bin/cmake --install /home/tracelab/RobotUnified_v2/build/five_dof_cobot_roll_j4_moveit_config

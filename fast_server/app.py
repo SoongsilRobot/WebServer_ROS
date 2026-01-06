@@ -1,10 +1,10 @@
 # fast_server/app.py
 import asyncio, re
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fast_server.Model import MoveJBody,AxisMoveBody,StatusBody
+from fast_server.Model import MoveJBody,AxisMoveBody,StatusBody,XYZMoveBody
 
 def create_app(bridge, cors_origins: Optional[list]=None) -> FastAPI:
     app = FastAPI(title="Robot Unified Server")
@@ -45,16 +45,17 @@ def create_app(bridge, cors_origins: Optional[list]=None) -> FastAPI:
     @app.post("/move/axis")
     def move_axis(body: AxisMoveBody):
         rel = (body.MODE.lower()=="relative")
+        print("/move/axis: ",body.AXIS, float(body.DIST), None if body.SPD is None else float(body.SPD), rel)
+
         bridge.publish_move_axis(body.AXIS, float(body.DIST), None if body.SPD is None else float(body.SPD),
                                  None if body.ACC is None else float(body.ACC), rel)
         return {"ok": True}
 
     @app.post("/move/XYZ")
-    def move_xyz(body: AxisMoveBody):
-        axis = body.AXIS.upper()
-        if axis not in ("X","Y","Z"):
-            raise HTTPException(status_code=400, detail="AXIS must be X/Y/Z for /move/XYZ")
+    def move_xyz(body: XYZMoveBody):
+        axis = body.XYZ.upper()
         rel = (body.MODE.lower()=="relative")
+        print("/move/XYZ: ",axis, float(body.DIST), None if body.SPD is None else float(body.SPD))
         bridge.publish_move_xyz(axis, float(body.DIST), None if body.SPD is None else float(body.SPD),
                                 None if body.ACC is None else float(body.ACC), rel)
         return {"ok": True}
