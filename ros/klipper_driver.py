@@ -110,6 +110,7 @@ class KlipperDriver(Node):
         self.sub_axis  = self.create_subscription(Float64MultiArray, '/robot/move_axis_cmd', self.on_axis_cmd, 10, callback_group=self.cb_motion)
         self.sub_xyz   = self.create_subscription(Float64MultiArray, '/robot/move_xyz_cmd', self.on_xyz_cmd, 10, callback_group=self.cb_motion)
         self.sub_vis   = self.create_subscription(Float64MultiArray, '/robot/move_vision_cmd', self.on_vision_cmd, 10, callback_group=self.cb_motion)
+        self.sub_pose  = self.create_subscription(Float64MultiArray, '/robot/move_pose_cmd', self.on_pose_cmd, 10, callback_group=self.cb_motion)
         
         self.get_logger().info(f"KlipperDriver ready; Moonraker: {cfg['moonraker_url']}")
 
@@ -253,6 +254,30 @@ class KlipperDriver(Node):
     def on_vision_cmd(self, msg: Float64MultiArray):
         # currently same as xyz
         self.on_xyz_cmd(msg)
+
+    def on_pose_cmd(self, msg: Float64MultiArray):
+        d = list(msg.data)
+        if len(d) < 9:
+            self.get_logger().warn("pose_cmd invalid")
+            return
+        if not self.kinematics:
+            self.get_logger().warn("Cartesian command received but IK is disabled")
+            return
+        x, y, z, roll, yaw, pitch = map(float, d[:6])
+        speed = None if d[6] == -1.0 else float(d[6])
+        accel = None if d[7] == -1.0 else float(d[7])
+        rel_flag = int(d[8]) if len(d) > 8 else 1
+        if abs(yaw) > 1e-6:
+            self.get_logger().warn("pose_cmd yaw ignored for IK (5-DOF)")
+        mode = "relative" if rel_flag == 1 else "absolute"
+        try:
+            joints_abs = self.kinematics.apply_pose_command(x, y, z, roll, yaw, pitch, mode)
+        except Exception as exc:
+            self.get_logger().error(f"IK solve failed for pose: {exc}")
+            return
+        rel_joints = [new - old for new, old in zip(joints_abs, self.last_joint_targets)]
+        self.last_joint_targets = list(joints_abs)
+        self._dispatch_movej(rel_joints, speed, accel)
 
     # ---------------------- status polling ----------------------
 

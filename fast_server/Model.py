@@ -63,6 +63,30 @@ class XYZMoveBody(BaseModel):
     class Config:
         json_schema_extra = {"example":{"XYZ":"X","DIST":100.0,"SPD":0.5,"ACC":1.0,"MODE":"relative"}}
 
+class PoseMoveBody(BaseModel):
+    pose: List[float]
+    SPD: float | None = None
+    ACC: float | None = None
+    MODE: str = "relative"
+
+    @field_validator('MODE')
+    @classmethod
+    def _mode_ok(cls, v):
+        v2 = str(v).strip().lower()
+        if v2 not in ("relative", "absolute"):
+            raise ValueError("MODE must be 'relative' or 'absolute'")
+        return v2
+
+    @field_validator('pose')
+    @classmethod
+    def _len6(cls, v):
+        if len(v) != 6:
+            raise ValueError("pose must be length 6: [x,y,z,roll,yaw,pitch]")
+        return v
+
+    class Config:
+        json_schema_extra = {"example":{"pose":[0.2,0.0,0.1,0.0,0.0,0.0],"SPD":0.2,"ACC":0.5,"MODE":"relative"}}
+
 class StatusBody(BaseModel):
     joint_pos : List[float]
     XYZ_pos   : List[float]

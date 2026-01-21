@@ -4,7 +4,7 @@ from typing import Optional, List
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fast_server.Model import MoveJBody,AxisMoveBody,StatusBody,XYZMoveBody
+from fast_server.Model import MoveJBody,AxisMoveBody,StatusBody,XYZMoveBody,PoseMoveBody
 
 def create_app(bridge, cors_origins: Optional[list]=None) -> FastAPI:
     app = FastAPI(title="Robot Unified Server")
@@ -60,11 +60,40 @@ def create_app(bridge, cors_origins: Optional[list]=None) -> FastAPI:
                                 None if body.ACC is None else float(body.ACC), rel)
         return {"ok": True}
 
+    @app.post("/robot/move_xyz")
+    def move_xyz_robot(body: XYZMoveBody):
+        axis = body.XYZ.upper()
+        rel = (body.MODE.lower() == "relative")
+        print("/robot/move_xyz: ", axis, float(body.DIST), None if body.SPD is None else float(body.SPD))
+        bridge.publish_move_xyz(axis, float(body.DIST), None if body.SPD is None else float(body.SPD),
+                                None if body.ACC is None else float(body.ACC), rel)
+        return {"ok": True}
+
     @app.post("/move/vision")
     def move_vision(body: AxisMoveBody):
         rel = (body.MODE.lower()=="relative")
         bridge.publish_move_vision(body.AXIS, float(body.DIST), None if body.SPD is None else float(body.SPD),
                                    None if body.ACC is None else float(body.ACC), rel)
+        return {"ok": True}
+
+    @app.post("/move/pose")
+    def move_pose(body: PoseMoveBody):
+        rel = (body.MODE.lower() == "relative")
+        x, y, z, roll, yaw, pitch = [float(v) for v in body.pose]
+        bridge.publish_move_pose(x, y, z, roll, yaw, pitch,
+                                 None if body.SPD is None else float(body.SPD),
+                                 None if body.ACC is None else float(body.ACC),
+                                 rel)
+        return {"ok": True}
+
+    @app.post("/robot/move_pose")
+    def move_pose_robot(body: PoseMoveBody):
+        rel = (body.MODE.lower() == "relative")
+        x, y, z, roll, yaw, pitch = [float(v) for v in body.pose]
+        bridge.publish_move_pose(x, y, z, roll, yaw, pitch,
+                                 None if body.SPD is None else float(body.SPD),
+                                 None if body.ACC is None else float(body.ACC),
+                                 rel)
         return {"ok": True}
 
     @app.get("/status")

@@ -8,7 +8,7 @@ joints:
   - {name: J3, stepper: Z, units_per_rad: 1, speed_units_per_rads: 1}
   - {name: J4, stepper: A, units_per_rad: 1, speed_units_per_rads: 1}
   - {name: J5, stepper: B, units_per_rad: 1, speed_units_per_rads: 1}
-  - {name: J6, stepper: C, units_per_rad: 1, speed_units_per_rads: 1}
+ ## - {name: J6, stepper: C, units_per_rad: 1, speed_units_per_rads: 1}
   
   # - {name: X, stepper: X, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}
   # - {name: Y, stepper: Y, units_per_rad: 57.2957795, speed_units_per_rads: 57.2957795}

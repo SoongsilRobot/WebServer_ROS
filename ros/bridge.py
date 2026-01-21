@@ -25,6 +25,7 @@ class ROSBridge(Node):
         self.pub_movej     = self.create_publisher(Float64MultiArray, '/robot/movej_cmd', 10)
         self.pub_move_axis = self.create_publisher(Float64MultiArray, '/robot/move_axis_cmd', 10)
         self.pub_move_xyz  = self.create_publisher(Float64MultiArray, '/robot/move_xyz_cmd', 10)
+        self.pub_move_pose = self.create_publisher(Float64MultiArray, '/robot/move_pose_cmd', 10)
         self.pub_move_vision = self.create_publisher(Float64MultiArray, '/robot/move_vision_cmd', 10)
 
         self._status = {}
@@ -118,6 +119,26 @@ class ROSBridge(Node):
             raise ValueError("AXIS must be J1..J6 or X/Y/Z")
         m = Float64MultiArray(); m.data = [code, float(dist), spd, acc, rel_flag]
         self.pub_move_vision.publish(m)
+
+    def publish_move_pose(
+        self,
+        x: float,
+        y: float,
+        z: float,
+        roll: float,
+        yaw: float,
+        pitch: float,
+        speed: float | None,
+        accel: float | None,
+        relative: bool,
+    ):
+        rel_flag = 1.0 if relative else 0.0
+        spd = -1.0 if speed is None else float(speed)
+        acc = -1.0 if accel is None else float(accel)
+        m = Float64MultiArray()
+        m.data = [float(x), float(y), float(z), float(roll), float(yaw), float(pitch),
+                  spd, acc, rel_flag]
+        self.pub_move_pose.publish(m)
 
     def on_status(self, msg: String):
         try:

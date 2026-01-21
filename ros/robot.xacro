@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<robot name="five_dof_cobot_rollJ4" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="L1" value="0.13461"/>
+  <xacro:property name="L2" value="0.0475"/>
+  <xacro:property name="L3" value="0.075"/>
+  <xacro:property name="L4" value="0.24168"/>
+  <xacro:property name="TOOL" value="0.08597"/>
+
+  <xacro:property name="m1" value="3.183"/>
+  <xacro:property name="m2" value="0.230"/>
+  <xacro:property name="m3" value="0.400"/>
+  <xacro:property name="m4" value="0.200"/>
+  <xacro:property name="m5" value="0.100"/>
+
+  <material name="mat_base"><color rgba="0.25 0.25 0.25 1.0"/></material>
+  <material name="mat_l1"><color rgba="0.85 0.10 0.10 1.0"/></material>
+  <material name="mat_l2"><color rgba="0.10 0.55 0.90 1.0"/></material>
+  <material name="mat_l3"><color rgba="0.10 0.75 0.25 1.0"/></material>
+  <material name="mat_l4"><color rgba="0.90 0.60 0.10 1.0"/></material>
+  <material name="mat_l5"><color rgba="0.60 0.20 0.90 1.0"/></material>
+  <material name="mat_ee"><color rgba="0.90 0.90 0.90 1.0"/></material>
+
+  <link name="base_link">
+    <visual><geometry><cylinder radius="0.08" length="0.04"/></geometry><material name="mat_base"/></visual>
+    <collision><geometry><cylinder radius="0.08" length="0.04"/></geometry></collision>
+    <inertial><origin xyz="0 0 0"/><mass value="4.113"/><inertia ixx="33.2" iyy="120.02" izz="120.21" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="link1">
+    <visual><origin xyz="0 0 ${L1/2}"/><geometry><cylinder radius="0.05" length="${L1}"/></geometry><material name="mat_l1"/></visual>
+    <collision><origin xyz="0 0 ${L1/2}"/><geometry><cylinder radius="0.05" length="${L1}"/></geometry></collision>
+    <inertial><origin xyz="0 0 ${L1/2}"/><mass value="${m1}"/><inertia ixx="20" iyy="40" izz="60" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="link2">
+    <visual><origin xyz="${L2/2} 0 0"/><geometry><box size="${L2} 0.05 0.05"/></geometry><material name="mat_l2"/></visual>
+    <collision><origin xyz="${L2/2} 0 0"/><geometry><box size="${L2} 0.05 0.05"/></geometry></collision>
+    <inertial><origin xyz="${L2/2} 0 0"/><mass value="${m2}"/><inertia ixx="10" iyy="30" izz="50" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="link3">
+    <visual><origin xyz="${L3/2} 0 0"/><geometry><box size="${L3} 0.045 0.045"/></geometry><material name="mat_l3"/></visual>
+    <collision><origin xyz="${L3/2} 0 0"/><geometry><box size="${L3} 0.045 0.045"/></geometry></collision>
+    <inertial><origin xyz="${L3/2} 0 0"/><mass value="${m3}"/><inertia ixx="2" iyy="20" izz="10" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="link4">
+    <visual><origin xyz="${L4/2} 0 0"/><geometry><box size="${L4} 0.04 0.04"/></geometry><material name="mat_l4"/></visual>
+    <collision><origin xyz="${L4/2} 0 0"/><geometry><box size="${L4} 0.04 0.04"/></geometry></collision>
+    <inertial><origin xyz="${L4/2} 0 0"/><mass value="${m4}"/><inertia ixx="1" iyy="30" izz="2" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="link5">
+    <visual><origin xyz="0 0 0"/><geometry><box size="0.05 0.04 0.04"/></geometry><material name="mat_l5"/></visual>
+    <collision><origin xyz="0 0 0"/><geometry><box size="0.05 0.04 0.04"/></geometry></collision>
+    <inertial><origin xyz="0 0 0"/><mass value="${m5}"/><inertia ixx="0.2" iyy="0.02" izz="0.1" ixy="0" ixz="0" iyz="0"/></inertial>
+  </link>
+
+  <link name="ee_link">
+    <visual><origin xyz="${TOOL} 0 0"/><geometry><cylinder radius="0.02" length="${TOOL}"/></geometry><material name="mat_ee"/></visual>
+    <collision><origin xyz="${TOOL} 0 0"/><geometry><cylinder radius="0.02" length="${TOOL}"/></geometry></collision>
+  </link>
+
+  <joint name="joint1_base_yaw" type="revolute">
+    <parent link="base_link"/><child link="link1"/>
+    <origin xyz="0 0 0.02" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" velocity="2.5" effort="101.2"/>
+  </joint>
+
+  <joint name="joint2_shoulder_pitch" type="revolute">
+    <parent link="link1"/><child link="link2"/>
+    <origin xyz="0 0 ${L1}" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14" upper="3.14" velocity="2.5" effort="33.6"/>
+  </joint>
+
+  <joint name="joint3_elbow_pitch" type="revolute">
+    <parent link="link2"/><child link="link3"/>
+    <origin xyz="${L2} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14" upper="3.14" velocity="2.5" effort="33.6"/>
+  </joint>
+
+  <joint name="joint4_wrist_roll" type="revolute">
+    <parent link="link3"/><child link="link4"/>
+    <origin xyz="${L3} 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-3.14" upper="3.14" velocity="2.5" effort="33.6"/>
+  </joint>
+
+  <joint name="joint5_wrist_pitch" type="revolute">
+    <parent link="link4"/><child link="link5"/>
+    <origin xyz="${L4} 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-3.14" upper="3.14" velocity="2.5" effort="25.2"/>
+  </joint>
+
+  <joint name="joint_ee_fixed" type="fixed">
+    <parent link="link5"/><child link="ee_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+</robot>
