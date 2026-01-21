@@ -1,7 +1,7 @@
 # RobotUnified v2
 - One-process (ROS + FastAPI) runner
 - Robust YOLO box mapping (fix misaligned top-left boxes)
-- Move endpoints: `/move/axis`, `/move/XYZ`, `/move/vision`
+- Move endpoints: `/move/axis`, `/move/pose`, `/move/vision`
 - Klipper driver via Moonraker
 
 ## Run
