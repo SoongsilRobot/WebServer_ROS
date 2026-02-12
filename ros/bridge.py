@@ -59,7 +59,7 @@ class ROSBridge(Node):
 
     def publish_movej(self, joints_rad: List[float], speed: float, accel: float, relative: bool):
         if len(joints_rad) != 6: raise ValueError("joints_rad must be length 6")
-        data = list(joints_rad) + [float(speed), float(accel), 1 if relative else 0.0]
+        data = list(joints_rad) + [float(speed), float(accel), 1.0 if relative else 0.0]
         m = Float64MultiArray(); m.data = data
         m.layout = MultiArrayLayout(dim=[
             MultiArrayDimension(label='joints', size=6, stride=9),
